@@ -1,0 +1,6 @@
+Flask
+requests
+groq
+langchain
+faiss-cpu
+sentence-transformers
