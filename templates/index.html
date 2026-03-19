@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <head>
     <title>Digital Persona Chatbot</title>
@@ -39,6 +39,87 @@ async function loadProfile() {
     } else {
         alert("Profile Loaded Successfully!");
     }
+}
+
+function addMessage(text, sender) {
+    const chatBox = document.getElementById("chatBox");
+
+    const msg = document.createElement("div");
+    msg.classList.add("message", sender);
+    msg.innerText = text;
+
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function ask() {
+    const query = document.getElementById("query").value;
+
+    addMessage(query, "user");
+
+    const res = await fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({query: query})
+    });
+
+    const data = await res.json();
+
+    addMessage(data.answer, "bot");
+
+    document.getElementById("query").value = "";
+}
+</script>
+
+</body>
+</html> -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Digital Persona Chatbot</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+    <h2>Digital Persona Chatbot</h2>
+
+    <div class="input-section">
+        <input id="url" placeholder="LinkedIn URL">
+    </div>
+
+    <input id="twitter" placeholder="Twitter handle (optional)">
+
+    <textarea id="profileText" rows="4" placeholder="Paste LinkedIn profile text (optional)"></textarea>
+
+    <button onclick="loadProfile()">Load Profile</button>
+
+    <div class="chat-box" id="chatBox"></div>
+
+    <div class="chat-input">
+        <input id="query" placeholder="Ask a question...">
+        <button onclick="ask()">Send</button>
+    </div>
+</div>
+
+<script>
+async function loadProfile() {
+    const url = document.getElementById("url").value;
+    const twitter = document.getElementById("twitter").value;
+    const profileText = document.getElementById("profileText").value;
+
+    const res = await fetch("/load_profile", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            linkedin_url: url,
+            twitter: twitter,
+            profile_text: profileText
+        })
+    });
+
+    const data = await res.json();
+    alert(data.message || data.error);
 }
 
 function addMessage(text, sender) {
