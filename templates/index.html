@@ -1,127 +1,82 @@
-<!-- <!DOCTYPE html>
-<html>
-<head>
-    <title>Digital Persona Chatbot</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-
-<div class="container">
-    <h2>Digital Persona Chatbot</h2>
-
-    <div class="input-section">
-        <input id="url" placeholder="Enter LinkedIn URL">
-        <button onclick="loadProfile()">Load</button>
-    </div>
-
-    <div class="chat-box" id="chatBox"></div>
-
-    <div class="chat-input">
-        <input id="query" placeholder="Ask a question...">
-        <button onclick="ask()">Send</button>
-    </div>
-</div>
-
-<script>
-async function loadProfile() {
-    const url = document.getElementById("url").value;
-
-    const res = await fetch("/load_profile", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({linkedin_url: url})
-    });
-
-    const data = await res.json();
-
-    if (data.error) {
-        alert(data.error);
-    } else {
-        alert("Profile Loaded Successfully!");
-    }
-}
-
-function addMessage(text, sender) {
-    const chatBox = document.getElementById("chatBox");
-
-    const msg = document.createElement("div");
-    msg.classList.add("message", sender);
-    msg.innerText = text;
-
-    chatBox.appendChild(msg);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-async function ask() {
-    const query = document.getElementById("query").value;
-
-    addMessage(query, "user");
-
-    const res = await fetch("/chat", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({query: query})
-    });
-
-    const data = await res.json();
-
-    addMessage(data.answer, "bot");
-
-    document.getElementById("query").value = "";
-}
-</script>
-
-</body>
-</html> -->
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Digital Persona Chatbot</title>
+    <title>Aura Scanner</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
-
-<div class="container">
-    <h2>Digital Persona Chatbot</h2>
-
-    <div class="input-section">
-        <input id="url" placeholder="LinkedIn URL">
+<body id="body">
+<div class="navbar">
+    <div class="nav-brand">
+        <h2>Aura Scanner</h2>
+        <h3>A tool to analyze persona of a person using LinkedIn and Twitter</h3>
     </div>
-
-    <input id="twitter" placeholder="Twitter handle (optional)">
-
-    <textarea id="profileText" rows="4" placeholder="Paste LinkedIn profile text (optional)"></textarea>
-
-    <button onclick="loadProfile()">Load Profile</button>
-
+    <button id="themeBtn" onclick="toggleTheme()">🌙</button>
+</div>
+<div id="loader" class="loader-overlay">
+    <div class="spinner"></div>
+    <p>Loading profile...</p>
+</div>
+<div class="main-container">
+    <div class="profile-input">
+        <input id="url" placeholder="LinkedIn URL">
+        <input id="twitter" placeholder="Twitter handle (optional)">
+        <button onclick="loadProfile()">Load</button>
+    </div>
     <div class="chat-box" id="chatBox"></div>
 
-    <div class="chat-input">
-        <input id="query" placeholder="Ask a question...">
-        <button onclick="ask()">Send</button>
+</div>
+<div class="bottom-bar">
+    <div class="input-wrapper">
+        <input id="query" placeholder="Ask about this person..." onkeydown="handleEnter(event)">
+        <button onclick="ask()" class="send-btn">➤</button>
     </div>
 </div>
 
 <script>
+
+// UI Toggle
+function toggleTheme() {
+    document.body.classList.toggle("light-mode");
+
+    const btn = document.getElementById("themeBtn");
+
+    if (document.body.classList.contains("light-mode")) {
+        btn.innerText = "🌞";
+    } else {
+        btn.innerText = "🌙";
+    }
+}
+
+// LOAD PROFILE
 async function loadProfile() {
     const url = document.getElementById("url").value;
     const twitter = document.getElementById("twitter").value;
-    const profileText = document.getElementById("profileText").value;
 
-    const res = await fetch("/load_profile", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            linkedin_url: url,
-            twitter: twitter,
-            profile_text: profileText
-        })
-    });
+    // SHOW LOADER
+    document.getElementById("loader").style.display = "flex";
 
-    const data = await res.json();
-    alert(data.message || data.error);
+    try {
+        const res = await fetch("/load_profile", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                linkedin_url: url,
+                twitter: twitter
+            })
+        });
+
+        const data = await res.json();
+        alert(data.message || data.error);
+
+    } catch (err) {
+        alert("Error loading profile");
+    }
+
+    // HIDE LOADER
+    document.getElementById("loader").style.display = "none";
 }
 
+// ADD MESSAGE
 function addMessage(text, sender) {
     const chatBox = document.getElementById("chatBox");
 
@@ -133,8 +88,18 @@ function addMessage(text, sender) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+// ENTER KEY SEND
+function handleEnter(event) {
+    if (event.key === "Enter") {
+        ask();
+    }
+}
+
+// ASK QUESTION
 async function ask() {
     const query = document.getElementById("query").value;
+
+    if (!query) return;
 
     addMessage(query, "user");
 
@@ -146,10 +111,11 @@ async function ask() {
 
     const data = await res.json();
 
-    addMessage(data.answer, "bot");
+    addMessage(data.answer || data.error, "bot");
 
     document.getElementById("query").value = "";
 }
+
 </script>
 
 </body>

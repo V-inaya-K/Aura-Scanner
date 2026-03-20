@@ -1,127 +1,37 @@
-# import requests
-
-# API_KEY = "YOUR_PROXYCURL_KEY"
-
-# def fetch_linkedin_data(linkedin_url):
-#     url = "https://nubela.co/proxycurl/api/v2/linkedin"
-
-#     headers = {
-#         "Authorization": f"Bearer {API_KEY}"
-#     }
-
-#     params = {"url": linkedin_url}
-
-#     res = requests.get(url, headers=headers, params=params)
-
-#     if res.status_code != 200:
-#         return None
-
-#     data = res.json()
-
-#     return {
-#         "name": data.get("full_name"),
-#         "headline": data.get("headline"),
-#         "experience": data.get("experiences", []),
-#         "education": data.get("education", []),
-#         "skills": data.get("skills", [])
-#     }
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 
 
-# def format_profile(profile):
-#     text = f"""
-#     Name: {profile['name']}
-#     Headline: {profile['headline']}
-#     """
+def fetch_linkedin_data(linkedin_url): #to fetch linkedin data using link of profile
+    options = webdriver.ChromeOptions()
+    options.add_argument("--start-maximized")
 
-#     for exp in profile['experience']:
-#         text += f"\n{exp.get('title')} at {exp.get('company')}"
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-#     for edu in profile['education']:
-#         text += f"\n{edu.get('school')} - {edu.get('degree')}"
+    driver.get("https://www.linkedin.com/login")
+    print("👉 Login manually...")
+    time.sleep(20)
 
-#     text += "\nSkills: " + ", ".join(profile['skills'])
+    driver.get(linkedin_url)
+    time.sleep(5)
 
-#     return text
+    # scroll content till end
+    for i in range(5):
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(2)
 
-import requests
-import json
-from dotenv import load_dotenv
-import os
+    # Extracting all text from page
+    full_text = driver.find_element(By.TAG_NAME, "body").text
 
-load_dotenv()
-
-API_KEY = os.getenv("BRIGHTDATA_API_KEY")
-ZONE = os.getenv("BRIGHTDATA_ZONE")
-
-def fetch_linkedin_data(linkedin_url):
-    url = "https://api.brightdata.com/request"
-
-    payload = {
-        "zone": ZONE,  # from Bright Data dashboard
-        "url": linkedin_url,
-        "format": "json"
-    }
-
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    try:
-        res = requests.post(url, headers=headers, json=payload)
-
-        if res.status_code != 200:
-            print("Error:", res.text)
-            return fallback_data()
-
-        data = res.json()
-
-        return parse_linkedin_data(data)
-
-    except Exception as e:
-        print("Exception:", e)
-        return fallback_data()
-
-
-def parse_linkedin_data(data):
-    # This depends on Bright Data response format
-    # Adjust fields as needed
+    driver.quit()
 
     return {
-        "name": data.get("name", "Unknown"),
-        "headline": data.get("headline", ""),
-        "experience": data.get("experience", []),
-        "education": data.get("education", []),
-        "skills": data.get("skills", [])
-    }
-
-
-def fallback_data():
-    return {
-        "name": "Demo User",
-        "headline": "AI Developer",
-        "experience": [
-            {"title": "Engineer", "company": "ABC"},
-        ],
-        "education": [
-            {"school": "Your College", "degree": "BTech"}
-        ],
-        "skills": ["Python", "Flask"]
+        "raw_text": full_text
     }
 
 
 def format_profile(profile):
-    text = f"""
-    Name: {profile['name']}
-    Headline: {profile['headline']}
-    """
-
-    for exp in profile['experience']:
-        text += f"\n{exp.get('title')} at {exp.get('company')}"
-
-    for edu in profile['education']:
-        text += f"\n{edu.get('school')} - {edu.get('degree')}"
-
-    text += "\nSkills: " + ", ".join(profile['skills'])
-
-    return text
+    return profile["raw_text"] #use raw text for profile formatting
